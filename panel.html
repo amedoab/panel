@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Panel">
+<title>Panel</title>
+<style>
+:root { --fondo:#D5D8D4; --hoja:#EEF0EC; --tinta:#1B2433; --suave:#5B6B7A; --linea:#B9BEB8; --alerta:#F5C518; }
+.noche { --fondo:#151A22; --hoja:#1E2530; --tinta:#C9CED6; --suave:#7D8896; --linea:#2E3744; --alerta:#9C7D10; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { height:100%; }
+body { background:var(--fondo); color:var(--tinta); font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;
+  font-size:17px; line-height:1.4; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent;
+  display:flex; flex-direction:column; padding:22px 26px 0; }
+button { font:inherit; cursor:pointer; }
+.condensada { font-family:"Avenir Next Condensed","Arial Narrow",sans-serif; }
+
+header { display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:14px; border-bottom:3px solid var(--tinta); }
+.reloj { font-size:116px; font-weight:700; line-height:.85; letter-spacing:-2px; }
+.reloj small { font-size:28px; font-weight:600; letter-spacing:0; margin-left:6px; }
+.fecha { font-size:22px; font-weight:600; margin-top:12px; }
+.saludo { color:var(--suave); }
+.clima { text-align:right; }
+.clima .temp { font-size:60px; font-weight:700; line-height:1; }
+.clima .desc { font-weight:600; }
+.clima .rango { color:var(--suave); }
+
+main { flex:1; display:flex; min-height:0; margin-top:18px; }
+section { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:16px; }
+section + section { margin-left:24px; padding-left:24px; border-left:1px solid var(--linea); }
+h2 { font-size:32px; font-weight:700; margin-bottom:10px; display:flex; justify-content:space-between; align-items:baseline; }
+h2 .cuenta { font-family:"Avenir Next",Arial,sans-serif; font-size:17px; font-weight:600; color:var(--suave); }
+
+.lista { background:var(--hoja); border-radius:6px; padding:8px 6px 12px 14px; margin-bottom:14px; }
+.lista h3 { font-size:18px; display:flex; justify-content:space-between; align-items:center; }
+.elem { display:flex; align-items:center; min-height:46px; border-bottom:1px solid var(--linea); }
+.caja { width:30px; height:30px; flex:none; margin-right:12px; border:2px solid var(--tinta); border-radius:4px;
+  background:transparent; color:var(--hoja); font-size:18px; font-weight:700; line-height:26px; }
+.hecho .caja { background:var(--tinta); }
+.texto { flex:1; }
+.hecho .texto { text-decoration:line-through; color:var(--suave); }
+.quitar { width:44px; height:44px; flex:none; border:0; background:none; color:var(--suave); font-size:24px; }
+.agregar { display:flex; margin:10px 8px 0 0; }
+input { flex:1; min-width:0; font:inherit; padding:9px 11px; border:1px solid var(--linea); border-radius:4px;
+  background:var(--fondo); color:var(--tinta); -webkit-appearance:none; }
+.btn { margin-left:8px; padding:9px 16px; border:0; border-radius:4px; background:var(--tinta); color:var(--hoja); font-weight:600; }
+
+.pago { display:flex; align-items:center; background:var(--hoja); border-radius:6px; padding:12px 14px;
+  margin-bottom:10px; border-left:8px solid var(--hoja); }
+.pago.urgente { border-left-color:var(--alerta); }
+.pago .info { flex:1; }
+.pago .concepto { font-weight:600; }
+.pago .cuando { color:var(--suave); font-size:15px; }
+.pago .monto { font-size:28px; font-weight:700; margin:0 6px 0 12px; }
+.vacio { color:var(--suave); padding:6px 0; }
+
+footer { border-top:3px solid var(--tinta); padding:12px 0 18px; }
+.respuesta { min-height:26px; max-height:100px; overflow-y:auto; -webkit-overflow-scrolling:touch; margin-bottom:10px; }
+.respuesta b { margin-right:6px; }
+.error { color:#B3261E; }
+.noche .error { color:#F28B82; }
+#mensaje { font-size:19px; padding:13px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="reloj condensada" id="reloj">--:--</div>
+    <div class="fecha" id="fecha"></div>
+    <div class="saludo" id="saludo"></div>
+  </div>
+  <div class="clima" id="clima"></div>
+</header>
+
+<main>
+  <section>
+    <h2 class="condensada">Pendientes <span class="cuenta" id="cuentaPend"></span></h2>
+    <div id="listas"></div>
+  </section>
+  <section>
+    <h2 class="condensada">Pagos <span class="cuenta" id="totalPagos"></span></h2>
+    <div id="pagos"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="respuesta" id="respuesta"><b>Jarvis</b><span id="respTexto">Escríbeme o dicta con el micrófono del teclado.</span></div>
+  <div style="display:flex">
+    <input id="mensaje" type="text" placeholder="Pídele algo a Jarvis" autocomplete="off">
+    <button class="btn" id="enviar">Enviar</button>
+    <button class="btn" id="ajustes">Ajustes</button>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var MODELO = 'claude-haiku-5-5';
+  var historial = [];
+  var ocupado = false;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function limpiar(s) { return String(s == null ? '' : s).replace(/^\s+|\s+$/g, ''); }
+  function minus(s) { return limpiar(s).toLowerCase(); }
+  function nuevoId() { return Math.random().toString(36).slice(2, 10); }
+  function dinero(n) { n = Math.round(Number(n) || 0); return '$' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function dos(n) { return n < 10 ? '0' + n : '' + n; }
+  function iso(d) { return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); }
+
+  // ----- Almacenamiento en el iPad -----
+  function leerJSON(clave, def) {
+    try { var v = JSON.parse(localStorage.getItem(clave)); return v || def; } catch (e) { return def; }
+  }
+  function guardarJSON(clave, valor) {
+    try { localStorage.setItem(clave, JSON.stringify(valor)); return true; }
+    catch (e) { decir('No pude guardar en el iPad. Revisa que Safari no esté en modo privado.', true); return false; }
+  }
+  var config = leerJSON('panel_config', { nombre: '', clave: '', lat: 22.1565, lon: -100.9855 });
+  var datos = leerJSON('panel_datos', { listas: [], pagos: [] });
+  if (!datos.listas) datos.listas = [];
+  if (!datos.pagos) datos.pagos = [];
+  function guardar() { guardarJSON('panel_datos', datos); pintar(); }
+
+  function decir(texto, esError) {
+    $('respTexto').innerHTML = esc(texto);
+    $('respTexto').className = esError ? 'error' : '';
+  }
+
+  // ----- Operaciones (las usan los botones y Jarvis) -----
+  function agregarElemento(lista, texto) {
+    texto = limpiar(texto); lista = limpiar(lista) || 'pendientes';
+    if (!texto) return 'Falta el texto del elemento.';
+    var l = null;
+    for (var i = 0; i < datos.listas.length; i++) if (minus(datos.listas[i].nombre) === minus(lista)) l = datos.listas[i];
+    if (!l) { l = { id: nuevoId(), nombre: lista, elementos: [] }; datos.listas.push(l); }
+    l.elementos.push({ id: nuevoId(), texto: texto, hecho: false });
+    return 'Agregado "' + texto + '" a la lista "' + l.nombre + '" (' + l.elementos.length + ' elementos).';
+  }
+  function buscarElemento(id, fn) {
+    for (var i = 0; i < datos.listas.length; i++)
+      for (var j = 0; j < datos.listas[i].elementos.length; j++)
+        if (datos.listas[i].elementos[j].id === id) return fn(datos.listas[i], j);
+    return 'No encontré ese elemento.';
+  }
+  function marcarElemento(id, hecho) {
+    return buscarElemento(id, function (l, j) {
+      var e = l.elementos[j];
+      e.hecho = (hecho === undefined || hecho === null) ? !e.hecho : !!hecho;
+      return 'Marcado "' + e.texto + '" como ' + (e.hecho ? 'hecho.' : 'pendiente.');
+    });
+  }
+  function borrarElemento(id) {
+    return buscarElemento(id, function (l, j) {
+      var e = l.elementos.splice(j, 1)[0];
+      return 'Borrado "' + e.texto + '".';
+    });
+  }
+  function borrarLista(id) {
+    for (var i = 0; i < datos.listas.length; i++) if (datos.listas[i].id === id) {
+      return 'Borrada la lista "' + datos.listas.splice(i, 1)[0].nombre + '".';
+    }
+    return 'No encontré esa lista.';
+  }
+  function agregarPago(concepto, monto, vence, mensual) {
+    concepto = limpiar(concepto);
+    if (!concepto) return 'Falta el concepto del pago.';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(vence || '')) return 'La fecha debe ser AAAA-MM-DD.';
+    datos.pagos.push({ id: nuevoId(), concepto: concepto, monto: Number(monto) || 0, vence: vence, mensual: !!mensual });
+    return 'Agregado el pago "' + concepto + '" para el ' + vence + '.';
+  }
+  function marcarPagado(id) {
+    for (var i = 0; i < datos.pagos.length; i++) if (datos.pagos[i].id === id) {
+      var p = datos.pagos[i];
+      if (p.mensual) {
+        var f = p.vence.split('-');
+        p.vence = iso(new Date(+f[0], +f[1], +f[2])); // mes siguiente
+        return 'Pagado "' + p.concepto + '". El siguiente vence el ' + p.vence + '.';
+      }
+      datos.pagos.splice(i, 1);
+      return 'Pagado "' + p.concepto + '" y quitado de la lista.';
+    }
+    return 'No encontré ese pago.';
+  }
+  function borrarPago(id) {
+    for (var i = 0; i < datos.pagos.length; i++) if (datos.pagos[i].id === id) {
+      return 'Borrado el pago "' + datos.pagos.splice(i, 1)[0].concepto + '".';
+    }
+    return 'No encontré ese pago.';
+  }
+
+  // ----- Peticiones -----
+  function pedir(metodo, url, cuerpo, headers, cb) {
+    var x = new XMLHttpRequest();
+    x.open(metodo, url, true);
+    x.timeout = 60000;
+    for (var h in headers) x.setRequestHeader(h, headers[h]);
+    x.onload = function () { var r = null; try { r = JSON.parse(x.responseText); } catch (e) {} cb(x.status, r); };
+    x.onerror = function () { cb(0, null); };
+    x.ontimeout = function () { cb(-1, null); };
+    x.send(cuerpo ? JSON.stringify(cuerpo) : null);
+  }
+
+  // ----- Clima (Open-Meteo, sin clave) -----
+  function descripcion(c) {
+    if (c === 0) return 'Despejado'; if (c === 1) return 'Mayormente despejado';
+    if (c === 2) return 'Parcialmente nublado'; if (c === 3) return 'Nublado';
+    if (c === 45 || c === 48) return 'Niebla'; if (c >= 51 && c <= 57) return 'Llovizna';
+    if (c >= 61 && c <= 67) return 'Lluvia'; if (c >= 71 && c <= 77) return 'Nieve';
+    if (c >= 80 && c <= 82) return 'Chubascos'; if (c >= 95) return 'Tormenta';
+    return '';
+  }
+  function pintarClima(c) {
+    if (!c) return;
+    $('clima').innerHTML = '<div class="temp condensada">' + c.temp + '°</div><div class="desc">' + esc(c.desc) +
+      '</div><div class="rango">Máx ' + c.max + '° Mín ' + c.min + '°</div>';
+  }
+  function cargarClima() {
+    var cache = leerJSON('panel_clima', null);
+    if (cache) pintarClima(cache);
+    if (cache && Date.now() - cache.t < 900000) return;
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + config.lat + '&longitude=' + config.lon +
+      '&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1';
+    pedir('GET', url, null, {}, function (st, r) {
+      if (st !== 200 || !r || !r.current) return;
+      var c = { t: Date.now(), temp: Math.round(r.current.temperature_2m), desc: descripcion(r.current.weather_code),
+                max: Math.round(r.daily.temperature_2m_max[0]), min: Math.round(r.daily.temperature_2m_min[0]) };
+      guardarJSON('panel_clima', c);
+      pintarClima(c);
+    });
+  }
+
+  // ----- Reloj -----
+  var ultimoMinuto = -1;
+  function reloj() {
+    var d = new Date();
+    if (d.getMinutes() === ultimoMinuto) return;
+    ultimoMinuto = d.getMinutes();
+    var h = d.getHours();
+    $('reloj').innerHTML = (h % 12 || 12) + ':' + dos(d.getMinutes()) + '<small>' + (h < 12 ? 'a.m.' : 'p.m.') + '</small>';
+    var dia = DIAS[d.getDay()];
+    $('fecha').innerHTML = dia.charAt(0).toUpperCase() + dia.slice(1) + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
+    var saludo = h < 12 ? 'Buenos días' : (h < 19 ? 'Buenas tardes' : 'Buenas noches');
+    $('saludo').innerHTML = esc(saludo + (config.nombre ? ', ' + config.nombre : ''));
+    document.documentElement.className = (h >= 22 || h < 6) ? 'noche' : '';
+    pintarPagos();
+  }
+
+  // ----- Pintar listas y pagos -----
+  function pintarListas() {
+    var h = '', pendientes = 0;
+    if (!datos.listas.length) h = '<p class="vacio">Sin listas todavía. Prueba diciéndole a Jarvis: “agrega comprar lijas a la lista tienda”.</p>';
+    for (var i = 0; i < datos.listas.length; i++) {
+      var l = datos.listas[i];
+      h += '<div class="lista"><h3><span>' + esc(l.nombre) + '</span>' +
+           '<button class="quitar" data-a="borrar_lista" data-id="' + l.id + '" aria-label="Borrar lista">×</button></h3>';
+      for (var j = 0; j < l.elementos.length; j++) {
+        var e = l.elementos[j];
+        if (!e.hecho) pendientes++;
+        h += '<div class="elem' + (e.hecho ? ' hecho' : '') + '">' +
+             '<button class="caja" data-a="marcar" data-id="' + e.id + '">' + (e.hecho ? '✓' : '') + '</button>' +
+             '<span class="texto">' + esc(e.texto) + '</span>' +
+             '<button class="quitar" data-a="quitar" data-id="' + e.id + '" aria-label="Borrar">×</button></div>';
+      }
+      h += '<div class="agregar"><input data-lista="' + esc(l.nombre) + '" placeholder="Agregar a ' + esc(l.nombre) + '">' +
+           '<button class="btn" data-a="agregar">Agregar</button></div></div>';
+    }
+    $('listas').innerHTML = h;
+    $('cuentaPend').innerHTML = pendientes ? pendientes + ' sin hacer' : '';
+  }
+  function diasHasta(fecha) {
+    var p = fecha.split('-'), v = new Date(+p[0], p[1] - 1, +p[2]);
+    var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    return Math.round((v - hoy) / 86400000);
+  }
+  function pintarPagos() {
+    var pagos = datos.pagos.slice().sort(function (a, b) { return a.vence < b.vence ? -1 : 1; });
+    var h = '', totalMes = 0, hoy = new Date();
+    if (!pagos.length) h = '<p class="vacio">Nada por pagar. Dile a Jarvis algo como “pago de luz de 1,200 el 20 de cada mes”.</p>';
+    for (var i = 0; i < pagos.length; i++) {
+      var p = pagos[i], n = diasHasta(p.vence), f = p.vence.split('-');
+      if (+f[0] === hoy.getFullYear() && +f[1] === hoy.getMonth() + 1) totalMes += Number(p.monto) || 0;
+      var cuando = n < 0 ? 'Vencido hace ' + (-n) + (n === -1 ? ' día' : ' días')
+                 : n === 0 ? 'Vence hoy' : n === 1 ? 'Vence mañana' : 'Vence en ' + n + ' días';
+      if (p.mensual) cuando += ', cada mes';
+      h += '<div class="pago' + (n <= 3 ? ' urgente' : '') + '"><div class="info">' +
+           '<div class="concepto">' + esc(p.concepto) + '</div><div class="cuando">' + cuando + '</div></div>' +
+           '<div class="monto condensada">' + dinero(p.monto) + '</div>' +
+           '<button class="btn" data-a="pagar" data-id="' + p.id + '">Pagué</button></div>';
+    }
+    $('pagos').innerHTML = h;
+    $('totalPagos').innerHTML = totalMes ? dinero(totalMes) + ' este mes' : '';
+  }
+  function pintar() { pintarListas(); pintarPagos(); }
+
+  // ----- Toques -----
+  function agregarDesde(input) {
+    if (!limpiar(input.value)) return;
+    agregarElemento(input.getAttribute('data-lista'), input.value);
+    guardar();
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target;
+    while (b && b.nodeType === 1 && !b.getAttribute('data-a')) b = b.parentNode;
+    if (!b || b.nodeType !== 1) return;
+    var a = b.getAttribute('data-a'), id = b.getAttribute('data-id');
+    if (a === 'marcar') { marcarElemento(id); guardar(); }
+    else if (a === 'quitar') { borrarElemento(id); guardar(); }
+    else if (a === 'borrar_lista') { if (confirm('¿Borrar la lista completa?')) { borrarLista(id); guardar(); } }
+    else if (a === 'agregar') agregarDesde(b.parentNode.querySelector('input'));
+    else if (a === 'pagar') { marcarPagado(id); guardar(); }
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.keyCode !== 13) return;
+    var t = ev.target;
+    if (t.getAttribute && t.getAttribute('data-lista') !== null) agregarDesde(t);
+    else if (t.id === 'mensaje') enviar();
+  });
+
+  // ----- Ajustes -----
+  function ajustes() {
+    var n = prompt('¿Cómo te llamo?', config.nombre || '');
+    if (n !== null) config.nombre = limpiar(n);
+    var k = prompt('Clave de la API de Claude (déjala igual si ya la pusiste):', config.clave || '');
+    if (k !== null) config.clave = limpiar(k);
+    guardarJSON('panel_config', config);
+    ultimoMinuto = -1; reloj();
+    decir(config.clave ? 'Listo. Ya puedes pedirme cosas.' : 'Falta la clave de la API para que Jarvis funcione.', !config.clave);
+  }
+  $('ajustes').addEventListener('click', ajustes);
+
+  // ----- Jarvis -----
+  var ID = { type: 'string', description: 'id que aparece en el estado' };
+  var HERRAMIENTAS = [
+    { name: 'agregar_elemento', description: 'Agrega un elemento a una lista. Si la lista no existe, la crea.',
+      input_schema: { type: 'object', required: ['lista', 'texto'], properties: { lista: { type: 'string' }, texto: { type: 'string' } } } },
+    { name: 'marcar_elemento', description: 'Marca un elemento como hecho o pendiente.',
+      input_schema: { type: 'object', required: ['id', 'hecho'], properties: { id: ID, hecho: { type: 'boolean' } } } },
+    { name: 'borrar_elemento', description: 'Borra un elemento de una lista.',
+      input_schema: { type: 'object', required: ['id'], properties: { id: ID } } },
+    { name: 'borrar_lista', description: 'Borra una lista completa.',
+      input_schema: { type: 'object', required: ['id'], properties: { id: ID } } },
+    { name: 'agregar_pago', description: 'Agrega un pago próximo.',
+      input_schema: { type: 'object', required: ['concepto', 'monto', 'vence'], properties: {
+        concepto: { type: 'string' }, monto: { type: 'number', description: 'en pesos' },
+        vence: { type: 'string', description: 'AAAA-MM-DD' },
+        mensual: { type: 'boolean', description: 'true si se repite cada mes' } } } },
+    { name: 'marcar_pagado', description: 'Marca un pago como pagado. Si es mensual, pasa al mes siguiente.',
+      input_schema: { type: 'object', required: ['id'], properties: { id: ID } } },
+    { name: 'borrar_pago', description: 'Borra un pago sin marcarlo como pagado.',
+      input_schema: { type: 'object', required: ['id'], properties: { id: ID } } }
+  ];
+  function ejecutar(nombre, e) {
+    switch (nombre) {
+      case 'agregar_elemento': return agregarElemento(e.lista, e.texto);
+      case 'marcar_elemento': return marcarElemento(e.id, e.hecho);
+      case 'borrar_elemento': return borrarElemento(e.id);
+      case 'borrar_lista': return borrarLista(e.id);
+      case 'agregar_pago': return agregarPago(e.concepto, e.monto, e.vence, e.mensual);
+      case 'marcar_pagado': return marcarPagado(e.id);
+      case 'borrar_pago': return borrarPago(e.id);
+    }
+    return 'Herramienta desconocida.';
+  }
+  function sistema() {
+    var d = new Date();
+    return 'Eres Jarvis, el asistente del panel de pendientes de ' + (config.nombre || 'tu usuario') + '. ' +
+      'Responde en español de México, en 1 a 3 frases, porque tu respuesta se ve en una barra pequeña. ' +
+      'Hoy es ' + DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear() +
+      ' (' + iso(d) + '), son las ' + dos(d.getHours()) + ':' + dos(d.getMinutes()) + '. ' +
+      'Usa las herramientas para cambiar listas y pagos, y nunca digas que hiciste un cambio sin usarlas. ' +
+      'Convierte fechas como "el viernes" o "el 15" a AAAA-MM-DD. Si falta un dato necesario (monto, fecha), pregúntalo. ' +
+      'Si no dicen en qué lista, usa "pendientes". Estado actual (JSON): ' + JSON.stringify(datos);
+  }
+  function conversar(mensajes, vuelta, cb) {
+    if (vuelta >= 6) return cb('Hice los cambios, pero la conversación se alargó demasiado. Revisa el panel.');
+    pedir('POST', 'https://api.anthropic.com/v1/messages',
+      { model: MODELO, max_tokens: 800, system: sistema(), tools: HERRAMIENTAS, messages: mensajes },
+      { 'Content-Type': 'application/json', 'x-api-key': config.clave, 'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true' },
+      function (st, r) {
+        if (st === 401) return cb('La clave de la API no es válida. Revísala en Ajustes.', true);
+        if (st === 0) return cb('No pude conectar con Claude. Si el wifi funciona, puede ser el certificado de iOS 10.', true);
+        if (st === -1) return cb('Claude tardó demasiado en responder. Intenta otra vez.', true);
+        if (st !== 200 || !r || !r.content) return cb('Error de la API (' + st + '): ' + ((r && r.error && r.error.message) || 'sin respuesta'), true);
+        mensajes.push({ role: 'assistant', content: r.content });
+        if (r.stop_reason !== 'tool_use') {
+          var texto = '';
+          for (var i = 0; i < r.content.length; i++) if (r.content[i].type === 'text') texto += r.content[i].text;
+          return cb(limpiar(texto) || 'Listo.');
+        }
+        var resultados = [];
+        for (var j = 0; j < r.content.length; j++) {
+          var b = r.content[j];
+          if (b.type === 'tool_use') resultados.push({ type: 'tool_result', tool_use_id: b.id, content: ejecutar(b.name, b.input || {}) });
+        }
+        guardar();
+        mensajes.push({ role: 'user', content: resultados });
+        conversar(mensajes, vuelta + 1, cb);
+      });
+  }
+  function enviar() {
+    var input = $('mensaje'), texto = limpiar(input.value);
+    if (!texto || ocupado) return;
+    if (!config.clave) { decir('Primero pon tu clave de la API en Ajustes.', true); return; }
+    ocupado = true;
+    input.value = ''; input.blur();
+    decir('Pensando…');
+    var mensajes = [];
+    for (var i = 0; i < historial.length; i++) mensajes.push({ role: historial[i].rol, content: historial[i].texto });
+    mensajes.push({ role: 'user', content: texto });
+    conversar(mensajes, 0, function (respuesta, esError) {
+      ocupado = false;
+      decir(respuesta, esError);
+      if (!esError) {
+        historial.push({ rol: 'user', texto: texto }, { rol: 'assistant', texto: respuesta });
+        if (historial.length > 10) historial = historial.slice(-10);
+      }
+    });
+  }
+  $('enviar').addEventListener('click', enviar);
+
+  // ----- Arranque -----
+  pintar();
+  reloj();
+  setInterval(reloj, 1000);
+  cargarClima();
+  setInterval(cargarClima, 900000);
+  if (!config.clave) decir('Toca Ajustes para poner tu nombre y la clave de la API de Claude.');
+})();
+</script>
+</body>
+</html>
