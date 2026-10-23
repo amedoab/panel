@@ -89,6 +89,23 @@ input::placeholder { color:var(--suave); }
 .pago .concepto { font-weight:600; }
 .pago .cuando { color:var(--suave); font-size:14px; }
 .pago .monto { font-size:26px; font-weight:700; margin:0 10px; }
+.meta { display:flex; align-items:center; min-height:54px; }
+.meta .info { flex:1; min-width:0; }
+.meta .barra { margin:6px 10px 0 0; }
+.meta .valor { font-size:24px; font-weight:700; margin-right:4px; }
+.meta .valor small { font-size:14px; font-weight:500; color:var(--suave); }
+.mas { width:38px; height:38px; flex:none; border-radius:50%; border:0; background:var(--hoja); color:var(--tinta); font-size:20px; margin-left:6px; }
+.mas.fuerte { background:var(--tinta); color:var(--fondo); }
+.semana { font-size:20px; font-weight:600; margin:12px 0 6px; }
+.publicacion { padding:6px 0 10px; }
+.publicacion .detalle { font-size:14px; color:var(--suave); margin:4px 0 0 38px; }
+.publicacion .copia { white-space:pre-line; background:var(--hoja); border-radius:12px; padding:10px 12px; margin:8px 8px 0 38px; font-size:15px; }
+.tipo { font-weight:600; }
+select { flex:1; min-width:0; font:inherit; padding:10px 16px; border:0; border-radius:999px; background:var(--hoja);
+  color:var(--tinta); -webkit-appearance:none; outline:none; min-height:42px; }
+.gasto { display:flex; align-items:center; min-height:40px; font-size:15px; }
+.gasto .texto { color:var(--tinta); }
+.gasto .cifra { font-weight:600; margin-left:8px; }
 </style>
 </head>
 <body>
@@ -105,7 +122,8 @@ input::placeholder { color:var(--suave); }
   <section>
     <h2 class="condensada">Contenido <button class="enlace" data-a="editar_rutinas" id="btnEditar">Editar</button></h2>
     <div id="contenido"></div>
-    <h2 class="condensada" style="margin-top:18px">Fin de año</h2>
+    <div id="canal"></div>
+    <h2 class="condensada" style="margin-top:18px">Ven a la tienda</h2>
     <div id="plan"></div>
   </section>
 
@@ -123,6 +141,15 @@ input::placeholder { color:var(--suave); }
       <div class="fila"><input id="pMonto" type="number" inputmode="decimal" placeholder="Monto"><input id="pFecha" type="date"></div>
       <div class="fila"><button class="btn fantasma" data-a="mensual" id="pMensual">Cada mes</button><span style="flex:1"></span><button class="btn" data-a="nuevo_pago">Agregar</button></div>
     </div>
+    <h2 class="condensada" style="margin-top:18px">Gastos <span class="cuenta" id="totalGastos"></span></h2>
+    <div id="gastos"></div>
+    <div class="tarjeta" style="padding:6px 12px 12px">
+      <div class="fila"><input id="gConcepto" placeholder="Nuevo gasto, ej. Anuncios Meta"></div>
+      <div class="fila"><input id="gMonto" type="number" inputmode="decimal" placeholder="Monto"><select id="gCategoria"></select></div>
+      <div class="fila"><input id="gFecha" type="date"><button class="btn" data-a="nuevo_gasto">Agregar</button></div>
+    </div>
+    <h2 class="condensada" style="margin-top:18px">Fechas clave <span class="cuenta" id="cuentaFechas"></span></h2>
+    <div id="fechas"></div>
   </section>
 </main>
 
@@ -131,7 +158,7 @@ input::placeholder { color:var(--suave); }
   var DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
   var INICIAL = ['D','L','M','X','J','V','S'];
   var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  var SUGERENCIAS = ['Post de la tienda', 'Correo a suscriptores', 'Post del canal'];
+  var SUGERENCIAS = ['Post de la tienda', 'Correo a suscriptores'];
   var pagoMensual = false, editando = false;
 
   function $(id) { return document.getElementById(id); }
@@ -163,6 +190,91 @@ input::placeholder { color:var(--suave); }
   datos.rutinas = datos.rutinas || [];
   datos.hitos = datos.hitos || [];
   function guardar() { guardarJSON('panel_datos', datos); pintar(); }
+
+  // ----- Campaña "Ven a la tienda" (oct–dic 2026) y campaña de correo -----
+  // [inicio, fin, tema, Instagram, Facebook, Estados de WhatsApp, nota]
+  var SEMANAS = [
+    ['2026-10-06','2026-10-11','Arranque: conoce la tienda','Reel recorrido por la tienda; post fijado con horario y mapa','Mismo reel + post con ubicación','Foto de la fachada con horario','Actualizar fotos y horario del perfil de Google'],
+    ['2026-10-13','2026-10-18','Muro de tablas','Carrusel “¿qué medida de tabla me queda?”','Mismo carrusel, enfocado a papás','3 tablas nuevas con precio','Enlazar la guía de medidas'],
+    ['2026-10-20','2026-10-25','Arma tu tabla','Reel armando una completa en el mostrador','Post “tu primera tabla” para principiantes','Video corto del armado',''],
+    ['2026-10-27','2026-11-01','Halloween y Día de Muertos','Reel con gráficos de tablas de calaveras y Creature','Post temático','Sticker gratis por visita esa semana','Regalar stickers en mostrador'],
+    ['2026-11-03','2026-11-08','Sesión Kyoto 1','Invitación a sesión en spot de SLP; historias en vivo','Evento de Facebook','Invitación','Primera actividad de comunidad'],
+    ['2026-11-10','2026-11-15','Buen Fin (anuncio)','Adelanto de descuentos solo en tienda','Post de Buen Fin','Cuenta regresiva','Buen Fin: 13 al 17 de noviembre'],
+    ['2026-11-16','2026-11-22','Buen Fin (cierre) y resultados','Historias diarias de ofertas hasta el martes 17; fotos de clientes','Fotos de la sesión y del Buen Fin','“Último día” el 17','Pedir reseñas a quien compró'],
+    ['2026-11-23','2026-11-29','Llegadas nuevas','Carrusel de llegadas de temporada','Mismo carrusel','Fotos con precio',''],
+    ['2026-11-30','2026-12-06','Guía de regalos','Carrusel “regalos por presupuesto” ($300, $800, $1,500+)','Mismo, pensado para papás','Guía por partes','Promover apartado para Navidad'],
+    ['2026-12-07','2026-12-13','Sesión Kyoto 2','Sesión navideña o reto de trucos con premio','Evento de Facebook','Invitación','Premio: producto o vale de tienda'],
+    ['2026-12-14','2026-12-20','Recta final de regalos','Reel “te ayudamos a elegir”; recordatorio de horario','Post para papás','Horario de diciembre','Confirmar horario extendido si lo hay'],
+    ['2026-12-21','2026-12-27','Últimos regalos','Historias diarias, último día antes de Navidad','Post “todavía llegas”','Recordatorio 23 y 24',''],
+    ['2026-12-28','2026-12-31','Cierre del año','Reel con lo mejor del año y clientes','Agradecimiento','Agradecimiento','Medir resultados']
+  ];
+  var METAS = [['visitas','Visitas por la campaña',150],['resenas','Reseñas nuevas en Google',30],['contactos','Contactos nuevos de WhatsApp',200]];
+  var HITOS_PLAN = [
+    ['','Anotar los números de hoy: reseñas, seguidores, contactos y ventas de tienda'],
+    ['','Actualizar fotos, horario y descripción del perfil de Google'],
+    ['2026-10-08','Post fijado “Visítanos”'],
+    ['2026-10-08','Reel recorrido por la tienda'],
+    ['2026-10-08','Plantilla de Estado de WhatsApp'],
+    ['2026-10-14','Carrusel de medidas de tabla'],
+    ['2026-10-14','Tarjeta de mostrador con QR de reseñas'],
+    ['2026-10-22','Correo 1: Te extrañamos en la tienda'],
+    ['2026-11-01','Invitación a Sesión Kyoto 1 (elegir spot y fecha)'],
+    ['2026-11-09','Decidir descuentos y piezas de Buen Fin'],
+    ['2026-11-11','Decidir si te registras al Buen Fin oficial'],
+    ['2026-11-12','Correo 2: Buen Fin en Kyoto'],
+    ['2026-11-30','Guía de regalos por presupuesto'],
+    ['2026-12-01','Post explicando el apartado'],
+    ['2026-12-05','Invitación a Sesión Kyoto 2'],
+    ['2026-12-08','Correo 3: Regalos de Navidad y apartados'],
+    ['2026-12-15','Último día sugerido para pedidos en línea (llegan antes del 24)'],
+    ['2026-12-28','Reel resumen del año'],
+    ['2026-12-31','Medir resultados de la campaña']
+  ];
+  // Rutinas iniciales según las frecuencias del plan; se pueden editar
+  var RUTINAS_PLAN = [
+    ['Grabar contenido de la semana (1 hora)', [1]],
+    ['Revisar métricas de la campaña', [1]],
+    ['Post en Instagram y Facebook', [1, 3, 5]],
+    ['Estados de WhatsApp', [1, 2, 3, 4, 5, 6]],
+    ['Fotos nuevas al perfil de Google', [4]]
+  ];
+  datos.metas = datos.metas || { visitas: 0, resenas: 0, contactos: 0 };
+  if (!datos.planCargado) {
+    for (var ih = 0; ih < HITOS_PLAN.length; ih++) {
+      var existe = false;
+      for (var jh = 0; jh < datos.hitos.length; jh++) if (minus(datos.hitos[jh].texto) === minus(HITOS_PLAN[ih][1])) existe = true;
+      if (!existe) datos.hitos.push({ id: nuevoId(), texto: HITOS_PLAN[ih][1], fecha: HITOS_PLAN[ih][0], hecho: false });
+    }
+    if (!datos.rutinas.length) for (var ir = 0; ir < RUTINAS_PLAN.length; ir++)
+      datos.rutinas.push({ id: nuevoId(), nombre: RUTINAS_PLAN[ir][0], dias: RUTINAS_PLAN[ir][1], hechos: {} });
+    datos.planCargado = true;
+    guardarJSON('panel_datos', datos);
+  }
+  var verCumplidas = false;
+
+  // ----- Canal de WhatsApp (pestaña "Canal WhatsApp" de la hoja Productos Claude) -----
+  // [fecha, hora, tipo, texto, foto o video, nota]
+  var CANAL = [["2026-10-19", "12:00", "Bienvenida", "Bienvenidos al canal de Kyoto Skateshop.\nAquí vas a ver primero lo que llega a la tienda, ofertas solo para el canal y avisos importantes.\nCasi todo lo que tenemos es pieza única, así que si algo te late, escríbenos rápido.\n\nTienda: Séptima Calle #100, Col. San Luis\nLunes a viernes de 11:00 a 19:30, sábado de 11:00 a 18:00\nEn línea: kyotoskate.com", "Foto del frente o del interior de la tienda", "Fíjala como primera publicación si puedes."], ["2026-10-21", "19:30", "Novedad", "Acaba de llegar: [producto].\n[Una frase sobre el diseño o por qué está chido].\nPrecio: $[precio]\n\nEs pieza única. Apártala por WhatsApp o cómprala aquí: [enlace]", "Foto del producto con buena luz", "Escoge lo más llamativo que haya llegado en la semana."], ["2026-10-23", "12:00", "Servicio de la tienda", "¿Vas a estrenar tabla?\nTe la armamos gratis en la tienda, y con cada tabla va una lija negra lisa sin costo.\nSi quieres una lija con diseño, también tenemos.\n\n¿No sabes qué medida te queda? Checa la guía: kyotoskate.com/guia/", "Video corto armando un skate o foto de una tabla armada", ""], ["2026-10-24", "11:30", "Encuesta", "Pregunta: ¿Qué quieres ver más en la tienda?\nOpciones: Tablas / Ruedas y trucks / Ropa / Accesorios", "No lleva", "Créala con la opción Encuesta del canal. El resultado te ayuda a decidir qué pedir."], ["2026-10-26", "19:30", "Novedad (ropa)", "Ya llegó el frío.\nTenemos [sudaderas / chamarras] de [marcas o modelos].\nDesde $[precio].\n\nVen a probártelas o pídelas en línea: kyotoskate.com", "Foto de 2 o 3 prendas juntas o puestas", ""], ["2026-10-28", "12:00", "Exclusiva del canal", "Solo para quienes siguen este canal:\ndel jueves 29 al sábado 31 de octubre, [beneficio] mostrando este mensaje en la tienda o con el código [CÓDIGO] en kyotoskate.com.\n\nNo lo vamos a publicar en otras redes.", "Imagen sencilla con el beneficio", "Define el beneficio (por ejemplo un % en una categoría o un regalo) y crea el cupón en WooCommerce."], ["2026-10-30", "19:30", "Halloween / Día de Muertos", "Fin de semana de Halloween y Día de Muertos.\nTenemos [tablas / ropa / stickers] con calaveras y diseños oscuros para la ocasión.\n\nEl sábado abrimos de 11:00 a 18:00 y el domingo cerramos. En línea siempre: kyotoskate.com", "Foto de productos con calaveras o diseño oscuro", "No usar la colaboración Santa Cruz x Godzilla."], ["2026-10-31", "11:30", "Recordatorio exclusiva", "Hoy es el último día del beneficio del canal: [beneficio].\nMuestra este mensaje en la tienda (hoy abrimos de 11:00 a 18:00) o usa el código [CÓDIGO] en kyotoskate.com.", "La misma imagen del miércoles", ""], ["2026-11-03", "19:30", "Detrás de cámaras", "Así armamos un skate en Kyoto: de tabla sola a lista para rodar.\nEl armado es gratis cuando compras tu tabla con nosotros.", "Video de 30 a 60 segundos armando un skate", "Puedes grabarlo cualquier día y guardarlo para esta fecha."], ["2026-11-05", "12:00", "Novedad", "Nuevo en la tienda: [producto].\n[Una frase de detalle].\nPrecio: $[precio]\n\nSolo hay una pieza. Apártala por WhatsApp o cómprala aquí: [enlace]", "Foto del producto", ""], ["2026-11-07", "11:30", "Reseñas", "Si ya compraste con nosotros, nos ayudas mucho dejando una reseña en Google. Así más gente encuentra la tienda.\nhttps://g.page/r/CetdfsGSJthZEBE/review\n\nGracias por apoyar a la tienda.", "Foto del equipo o de clientes en la tienda (con permiso)", ""], ["2026-11-09", "19:30", "Aviso Buen Fin", "Del viernes 13 al martes 17 de noviembre vamos a tener ofertas en la tienda y en kyotoskate.com.\nAquí en el canal vas a ver las promos antes que nadie.\nAdelanto: habrá descuentos en [categorías].", "Imagen con las fechas 13 al 17 de noviembre", "El logo oficial del Buen Fin solo se puede usar si la tienda se registra en el portal oficial (registro abierto hasta el 12 de noviembre)."], ["2026-11-12", "20:00", "Preventa del canal", "Como prometimos, aquí van las ofertas un día antes que en redes:\n- [producto o categoría]: [descuento]\n- [producto o categoría]: [descuento]\n- [producto o categoría]: [descuento]\n\nArrancan mañana a las 11:00. Si ya sabes qué quieres, escríbenos y te lo apartamos.", "Imagen con la lista de ofertas", "Ajusta la lista al número real de ofertas."], ["2026-11-13", "11:00", "Arranque Buen Fin", "Ya empezaron las ofertas.\nTienda abierta hoy de 11:00 a 19:30 y el sábado de 11:00 a 18:00.\nEn línea todo el fin largo: kyotoskate.com\nTambién puedes apartar o comprar directo por WhatsApp.", "Foto de la tienda o de los productos en oferta", ""], ["2026-11-16", "12:00", "Recordatorio", "Quedan dos días de ofertas: hoy y mañana.\n[Horario de hoy en la tienda]. En línea: kyotoskate.com", "Foto de un producto en oferta que siga disponible", "El lunes 16 es día festivo: confirma si abres y en qué horario."], ["2026-11-17", "12:00", "Último día", "Hoy es el último día de ofertas.\nTienda abierta de 11:00 a 19:30 y en línea hasta las 23:59 en kyotoskate.com.\nGracias por apoyar a la tienda.", "Foto de lo que quede en oferta", "Confirma hasta qué hora dura la oferta en línea."]];
+  datos.canal = datos.canal || [];
+  if (!datos.canalCargado) {
+    for (var ic = 0; ic < CANAL.length; ic++) {
+      var c0 = CANAL[ic];
+      datos.canal.push({ id: nuevoId(), fecha: c0[0], hora: c0[1], tipo: c0[2], texto: c0[3], foto: c0[4], nota: c0[5], hecho: false });
+    }
+    // La rutina genérica del canal ya no hace falta: el calendario manda
+    for (var ir2 = datos.rutinas.length - 1; ir2 >= 0; ir2--) if (minus(datos.rutinas[ir2].nombre) === 'post del canal') datos.rutinas.splice(ir2, 1);
+    datos.canalCargado = true;
+  }
+  var canalAbierto = null;
+
+  // ----- Gastos (pestañas "Gastos" y "Publicidad") -----
+  var CATEGORIAS = ['Publicidad', 'Mercancía', 'Envíos', 'Renta', 'Servicios', 'Comisiones y sueldos', 'Otro'];
+  datos.gastos = datos.gastos || [];
+  if (!datos.gastosCargado) {
+    datos.gastos.push({ id: nuevoId(), fecha: '2026-10-21', categoria: 'Publicidad', concepto: 'Meta (Facebook/Instagram)', monto: 1850 });
+    datos.gastosCargado = true;
+  }
+  guardarJSON('panel_datos', datos);
 
   // ----- Clima -----
   function descripcion(c) {
@@ -230,30 +342,35 @@ input::placeholder { color:var(--suave); }
       $('contenido').innerHTML = h;
       return;
     }
-    if (!datos.rutinas.length) {
+    if (!datos.rutinas.length && !datos.canal.length) {
       $('contenido').innerHTML = '<p class="vacio">Toca Editar para agregar lo que publicas cada semana: posts de la tienda, correos o el canal.</p>';
       return;
     }
     var deHoy = [];
     for (var j = 0; j < datos.rutinas.length; j++) if (datos.rutinas[j].dias.indexOf(hoy.getDay()) >= 0) deHoy.push(datos.rutinas[j]);
     h += '<div class="tarjeta"><h3>Hoy toca</h3>';
-    if (!deHoy.length) h += '<p class="vacio">Nada programado para hoy.</p>';
+    var canalHoy = [];
+    for (var ch = 0; ch < datos.canal.length; ch++) if (datos.canal[ch].fecha === clave) canalHoy.push(datos.canal[ch]);
+    for (var cz = 0; cz < canalHoy.length; cz++) {
+      var cc = canalHoy[cz];
+      h += '<div class="elem' + (cc.hecho ? ' hecho' : '') + '"><button class="caja" data-a="canal_hecho" data-id="' + cc.id + '">' +
+           (cc.hecho ? '✓' : '') + '</button><span class="texto">Canal: ' + esc(cc.tipo) + '</span><span class="nota">' + cc.hora + '</span></div>';
+    }
+    if (!deHoy.length && !canalHoy.length) h += '<p class="vacio">Nada programado para hoy.</p>';
     for (var m = 0; m < deHoy.length; m++) {
       var hecho = !!(deHoy[m].hechos && deHoy[m].hechos[clave]);
       h += '<div class="elem' + (hecho ? ' hecho' : '') + '"><button class="caja" data-a="rutina_hecha" data-id="' + deHoy[m].id + '">' +
            (hecho ? '✓' : '') + '</button><span class="texto">' + esc(deHoy[m].nombre) + '</span></div>';
     }
-    h += '<h4>Próximos días</h4>';
     var lineas = 0;
-    for (var n = 1; n <= 6 && lineas < 4; n++) {
+    for (var n = 1; n <= 6 && lineas < 1; n++) {
       var f = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + n), nombres = [];
       for (var q = 0; q < datos.rutinas.length; q++) if (datos.rutinas[q].dias.indexOf(f.getDay()) >= 0) nombres.push(datos.rutinas[q].nombre);
       if (!nombres.length) continue;
       var etiqueta = n === 1 ? 'Mañana' : DIAS[f.getDay()].charAt(0).toUpperCase() + DIAS[f.getDay()].slice(1);
-      h += '<div class="proximo"><b>' + etiqueta + '</b><span>' + esc(nombres.join(', ')) + '</span></div>';
+      h += '<div class="proximo" style="margin-top:6px"><b>' + etiqueta + '</b><span>' + esc(nombres.join(', ')) + '</span></div>';
       lineas++;
     }
-    if (!lineas) h += '<p class="vacio">Nada en los próximos días.</p>';
     $('contenido').innerHTML = h + '</div>';
   }
   function buscarRutina(id) { for (var i = 0; i < datos.rutinas.length; i++) if (datos.rutinas[i].id === id) return i; return -1; }
@@ -262,31 +379,121 @@ input::placeholder { color:var(--suave); }
     for (var k in r.hechos) if (k < limite) delete r.hechos[k];
   }
 
-  // ----- Plan de fin de año -----
-  function pintarPlan() {
-    var hoy = new Date(), faltan = diasHasta(hoy.getFullYear() + '-12-31');
-    var hitos = datos.hitos.slice().sort(function (a, b) { return (a.fecha || '9') < (b.fecha || '9') ? -1 : 1; });
-    var hechos = 0;
-    for (var i = 0; i < hitos.length; i++) if (hitos[i].hecho) hechos++;
-    var h = '<div class="tarjeta"><div class="cuenta-atras"><span class="num condensada">' + faltan + '</span><span class="txt">' +
-            (faltan === 1 ? 'día para cerrar el año' : 'días para cerrar el año') + '</span></div>';
-    if (hitos.length) {
-      h += '<div class="barra"><div style="width:' + Math.round(hechos / hitos.length * 100) + '%"></div></div>' +
-           '<div class="sub">' + hechos + ' de ' + hitos.length + ' metas cumplidas</div>';
+  // ----- Canal de WhatsApp -----
+  function cuandoCanal(c) {
+    var n = diasHasta(c.fecha), f = c.fecha.split('-');
+    var dia = DIAS[new Date(+f[0], f[1] - 1, +f[2]).getDay()].slice(0, 3);
+    if (n < 0) return 'Atrasada: ' + dia + ' ' + fechaCorta(c.fecha);
+    if (n === 0) return 'Hoy a las ' + c.hora;
+    if (n === 1) return 'Mañana a las ' + c.hora;
+    return dia + ' ' + fechaCorta(c.fecha) + ', ' + c.hora;
+  }
+  function pintarCanal() {
+    var pend = [];
+    for (var i = 0; i < datos.canal.length; i++) if (!datos.canal[i].hecho) pend.push(datos.canal[i]);
+    pend.sort(function (a, b) { return (a.fecha + a.hora) < (b.fecha + b.hora) ? -1 : 1; });
+    if (!datos.canal.length) { $('canal').innerHTML = ''; return; }
+    var h = '<div class="tarjeta"><h3><span>Canal de WhatsApp</span><span class="sub">' +
+            (pend.length ? pend.length + ' por publicar' : 'Al día') + '</span></h3>';
+    if (!pend.length) h += '<p class="vacio">Ya publicaste todo lo del calendario.</p>';
+    for (var j = 0; j < pend.length && j < 3; j++) {
+      var c = pend[j], abierto = canalAbierto === c.id, tarde = diasHasta(c.fecha) < 0;
+      h += '<div class="publicacion"><div class="elem" style="min-height:0"><button class="caja" data-a="canal_hecho" data-id="' + c.id + '"></button>' +
+           '<span class="texto"><span class="tipo">' + esc(c.tipo) + '</span></span>' +
+           '<span class="nota' + (tarde ? ' tarde-ya' : '') + '">' + esc(cuandoCanal(c)) + '</span></div>' +
+           '<div class="detalle">' + esc(c.foto) + (c.nota ? '. ' + esc(c.nota) : '') + '</div>' +
+           '<button class="enlace" data-a="canal_texto" data-id="' + c.id + '" style="margin-left:38px">' + (abierto ? 'Ocultar texto' : 'Ver texto') + '</button>' +
+           (abierto ? '<div class="copia">' + esc(c.texto) + '</div>' : '') + '</div>';
     }
+    if (pend.length > 3) h += '<div class="sub">Y ' + (pend.length - 3) + ' más después.</div>';
+    $('canal').innerHTML = h + '</div>';
+  }
+  function buscarCanal(id) { for (var i = 0; i < datos.canal.length; i++) if (datos.canal[i].id === id) return datos.canal[i]; return null; }
+
+  // ----- Gastos -----
+  function pintarGastos() {
+    var hoy = new Date(), mes = hoy.getFullYear() + '-' + dos(hoy.getMonth() + 1), total = 0, porCat = {}, h = '';
+    for (var i = 0; i < datos.gastos.length; i++) {
+      var g = datos.gastos[i];
+      if (g.fecha.slice(0, 7) !== mes) continue;
+      total += Number(g.monto) || 0;
+      porCat[g.categoria] = (porCat[g.categoria] || 0) + (Number(g.monto) || 0);
+    }
+    $('totalGastos').innerHTML = total ? dinero(total) + ' este mes' : '';
+    h += '<div class="tarjeta">';
+    var cats = [];
+    for (var k in porCat) cats.push(k);
+    cats.sort(function (a, b) { return porCat[b] - porCat[a]; });
+    if (!cats.length) h += '<p class="vacio">Sin gastos este mes.</p>';
+    for (var c = 0; c < cats.length; c++) {
+      var pct = Math.round(porCat[cats[c]] / total * 100);
+      h += '<div class="proximo"><b style="width:auto;flex:1">' + esc(cats[c]) + '</b><span>' + dinero(porCat[cats[c]]) + '</span></div>' +
+           '<div class="barra" style="margin:2px 0 8px"><div style="width:' + pct + '%"></div></div>';
+    }
+    var recientes = datos.gastos.slice().sort(function (a, b) { return a.fecha < b.fecha ? 1 : -1; }).slice(0, 3);
+    if (recientes.length) h += '<h4>Últimos</h4>';
+    for (var r = 0; r < recientes.length; r++) {
+      var x = recientes[r];
+      h += '<div class="gasto"><span class="texto">' + esc(x.concepto) + '</span><span class="nota">' + fechaCorta(x.fecha) +
+           '</span><span class="cifra">' + dinero(x.monto) + '</span><button class="quitar" data-a="borrar_gasto" data-id="' + x.id + '">×</button></div>';
+    }
+    $('gastos').innerHTML = h + '</div>';
+  }
+
+  // ----- Campaña -----
+  function pintarPlan() {
+    var hoy = new Date(), clave = iso(hoy), faltan = diasHasta(hoy.getFullYear() + '-12-31'), h = '';
+    // Semana actual (o la siguiente si hoy es domingo entre semanas)
+    var sem = null, actual = false;
+    for (var i = 0; i < SEMANAS.length; i++) {
+      if (clave >= SEMANAS[i][0] && clave <= SEMANAS[i][1]) { sem = SEMANAS[i]; actual = true; break; }
+      if (!sem && SEMANAS[i][0] > clave) sem = SEMANAS[i];
+    }
+    h += '<div class="tarjeta"><div class="cuenta-atras"><span class="num condensada">' + Math.max(faltan, 0) + '</span><span class="txt">' +
+         (faltan === 1 ? 'día de campaña' : 'días de campaña') + '</span></div>';
+    if (sem) {
+      h += '<div class="semana">' + (actual ? 'Esta semana: ' : 'Siguiente: ') + esc(sem[2]) + '</div>' +
+           '<div class="proximo"><b>Instagram</b><span>' + esc(sem[3]) + '</span></div>' +
+           '<div class="proximo"><b>Facebook</b><span>' + esc(sem[4]) + '</span></div>' +
+           '<div class="proximo"><b>WhatsApp</b><span>' + esc(sem[5]) + '</span></div>' +
+           (sem[6] ? '<div class="sub" style="margin-top:6px">' + esc(sem[6]) + '</div>' : '');
+    } else h += '<p class="vacio">La campaña terminó. ¡A medir resultados!</p>';
+    h += '</div>';
+
+    // Metas con contador
+    h += '<div class="tarjeta"><h3>Metas al 31 de diciembre</h3>';
+    for (var m = 0; m < METAS.length; m++) {
+      var k = METAS[m][0], v = datos.metas[k] || 0, meta = METAS[m][2];
+      h += '<div class="meta"><div class="info"><div>' + METAS[m][1] + '</div><div class="barra"><div style="width:' +
+           Math.min(100, Math.round(v / meta * 100)) + '%"></div></div></div>' +
+           '<span class="valor condensada">' + v + '<small>/' + meta + '</small></span>' +
+           '<button class="mas" data-a="meta_menos" data-id="' + k + '" aria-label="Restar">−</button>' +
+           '<button class="mas fuerte" data-a="meta_mas" data-id="' + k + '" aria-label="Sumar">+</button></div>';
+    }
+    h += '</div>';
+
+    $('plan').innerHTML = h; h = '';
+    // Fechas clave
+    var hitos = datos.hitos.slice().sort(function (a, b) { return (a.fecha || '0') < (b.fecha || '0') ? -1 : 1; });
+    var hechos = 0;
+    for (var c = 0; c < hitos.length; c++) if (hitos[c].hecho) hechos++;
+    $('cuentaFechas').innerHTML = hechos + ' de ' + hitos.length;
+    h += '<div class="tarjeta"><div class="barra"><div style="width:' + (hitos.length ? Math.round(hechos / hitos.length * 100) : 0) + '%"></div></div>';
     for (var j = 0; j < hitos.length; j++) {
       var t = hitos[j], nota = '';
+      if (t.hecho && !verCumplidas) continue;
       if (t.fecha && !t.hecho) {
         var n = diasHasta(t.fecha);
-        nota = '<span class="nota' + (n < 0 ? ' tarde-ya' : '') + '">' + (n < 0 ? 'Atrasada' : fechaCorta(t.fecha)) + '</span>';
+        nota = '<span class="nota' + (n < 0 ? ' tarde-ya' : '') + '">' + (n < 0 ? 'Atrasada' : n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : fechaCorta(t.fecha)) + '</span>';
       }
       h += '<div class="elem' + (t.hecho ? ' hecho' : '') + '"><button class="caja" data-a="hito" data-id="' + t.id + '">' + (t.hecho ? '✓' : '') + '</button>' +
            '<span class="texto">' + esc(t.texto) + '</span>' + nota +
            '<button class="quitar" data-a="borrar_hito" data-id="' + t.id + '">×</button></div>';
     }
-    h += '<div class="fila"><input id="hTexto" placeholder="Nueva meta del plan"></div>' +
+    if (hechos) h += '<button class="enlace" data-a="ver_cumplidas" style="margin:6px 0 2px">' + (verCumplidas ? 'Ocultar cumplidas' : 'Ver ' + hechos + ' cumplidas') + '</button>';
+    h += '<div class="fila"><input id="hTexto" placeholder="Nueva fecha clave"></div>' +
          '<div class="fila"><input id="hFecha" type="date"><button class="btn" data-a="nuevo_hito">Agregar</button></div></div>';
-    $('plan').innerHTML = h;
+    $('fechas').innerHTML = h;
   }
   function buscarHito(id) { for (var i = 0; i < datos.hitos.length; i++) if (datos.hitos[i].id === id) return i; return -1; }
 
@@ -333,7 +540,7 @@ input::placeholder { color:var(--suave); }
     $('totalPagos').innerHTML = totalMes ? dinero(totalMes) + ' este mes' : '';
   }
 
-  function pintar() { pintarContenido(); pintarPlan(); pintarListas(); pintarPagos(); }
+  function pintar() { pintarContenido(); pintarCanal(); pintarPlan(); pintarListas(); pintarPagos(); pintarGastos(); }
 
   // ----- Acciones -----
   var acciones = {
@@ -369,6 +576,22 @@ input::placeholder { color:var(--suave); }
       guardar();
     },
     hito: function (b, id) { var i = buscarHito(id); if (i >= 0) { datos.hitos[i].hecho = !datos.hitos[i].hecho; guardar(); } },
+    canal_hecho: function (b, id) { var c = buscarCanal(id); if (c) { c.hecho = !c.hecho; guardar(); } },
+    canal_texto: function (b, id) { canalAbierto = canalAbierto === id ? null : id; pintarCanal(); },
+    nuevo_gasto: function () {
+      var c = limpiar($('gConcepto').value), m = Number($('gMonto').value) || 0;
+      if (!c) { aviso('Escribe en qué gastaste.'); return; }
+      if (!m) { aviso('Escribe el monto.'); return; }
+      datos.gastos.push({ id: nuevoId(), fecha: $('gFecha').value || iso(new Date()), categoria: $('gCategoria').value, concepto: c, monto: m });
+      $('gConcepto').value = ''; $('gMonto').value = ''; $('gFecha').value = '';
+      guardar();
+    },
+    borrar_gasto: function (b, id) {
+      for (var i = 0; i < datos.gastos.length; i++) if (datos.gastos[i].id === id && confirm('¿Borrar "' + datos.gastos[i].concepto + '"?')) { datos.gastos.splice(i, 1); guardar(); return; }
+    },
+    meta_mas: function (b, k) { datos.metas[k] = (datos.metas[k] || 0) + 1; guardar(); },
+    meta_menos: function (b, k) { datos.metas[k] = Math.max(0, (datos.metas[k] || 0) - 1); guardar(); },
+    ver_cumplidas: function () { verCumplidas = !verCumplidas; pintarPlan(); },
     borrar_hito: function (b, id) { var i = buscarHito(id); if (i >= 0) { datos.hitos.splice(i, 1); guardar(); } },
     marcar: function (b, id) { var p = buscarElemento(id); if (p) { var e = datos.listas[p[0]].elementos[p[1]]; e.hecho = !e.hecho; guardar(); } },
     quitar: function (b, id) { var p = buscarElemento(id); if (p) { datos.listas[p[0]].elementos.splice(p[1], 1); guardar(); } },
@@ -425,9 +648,15 @@ input::placeholder { color:var(--suave); }
     else if (id === 'rNombre') acciones.nueva_rutina();
     else if (id === 'hTexto') acciones.nuevo_hito();
     else if (id === 'pConcepto' || id === 'pMonto') acciones.nuevo_pago();
+    else if (id === 'gConcepto' || id === 'gMonto') acciones.nuevo_gasto();
   });
 
   // ----- Arranque -----
+  (function () {
+    var h = '';
+    for (var i = 0; i < CATEGORIAS.length; i++) h += '<option>' + CATEGORIAS[i] + '</option>';
+    $('gCategoria').innerHTML = h;
+  })();
   reloj();
   setInterval(reloj, 1000);
   cargarClima();
