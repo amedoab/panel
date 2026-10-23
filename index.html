@@ -8,61 +8,67 @@
 <meta name="apple-mobile-web-app-title" content="Panel">
 <title>Panel</title>
 <style>
-:root { --fondo:#D5D8D4; --hoja:#EEF0EC; --tinta:#1B2433; --suave:#5B6B7A; --linea:#B9BEB8; --alerta:#F5C518; }
-.noche { --fondo:#151A22; --hoja:#1E2530; --tinta:#C9CED6; --suave:#7D8896; --linea:#2E3744; --alerta:#9C7D10; }
+/* El color de fondo cambia con la hora del día */
+:root, .tarde { --fondo:#2F5BFF; --tinta:#FFFFFF; --suave:rgba(255,255,255,.72); --hoja:rgba(255,255,255,.14); --linea:rgba(255,255,255,.22); }
+.manana { --fondo:#FF8A00; --tinta:#2B1400; --suave:rgba(43,20,0,.66); --hoja:rgba(255,255,255,.30); --linea:rgba(43,20,0,.16); }
+.noche  { --fondo:#2A1466; --tinta:#F1ECFF; --suave:rgba(241,236,255,.62); --hoja:rgba(255,255,255,.09); --linea:rgba(255,255,255,.14); }
 * { box-sizing:border-box; margin:0; padding:0; }
 html, body { height:100%; }
 body { background:var(--fondo); color:var(--tinta); font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;
   font-size:17px; line-height:1.4; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent;
-  display:flex; flex-direction:column; padding:22px 26px 0; }
+  display:flex; flex-direction:column; padding:28px 32px 0; transition:background-color 3s; }
 button { font:inherit; cursor:pointer; }
 .condensada { font-family:"Avenir Next Condensed","Arial Narrow",sans-serif; }
 
-header { display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:14px; border-bottom:3px solid var(--tinta); }
-.reloj { font-size:116px; font-weight:700; line-height:.85; letter-spacing:-2px; }
-.reloj small { font-size:28px; font-weight:600; letter-spacing:0; margin-left:6px; }
-.fecha { font-size:22px; font-weight:600; margin-top:12px; }
-.saludo { color:var(--suave); }
-.clima { text-align:right; }
-.clima .temp { font-size:60px; font-weight:700; line-height:1; }
-.clima .desc { font-weight:600; }
+header { display:flex; justify-content:space-between; align-items:flex-start; }
+.reloj { font-size:150px; font-weight:700; line-height:.8; letter-spacing:-4px; }
+.reloj small { font-size:30px; font-weight:600; letter-spacing:0; margin-left:8px; color:var(--suave); }
+.fecha { font-size:24px; font-weight:600; margin-top:16px; }
+.saludo { color:var(--suave); font-size:19px; }
+.clima { text-align:right; padding-top:8px; }
+.clima .temp { font-size:72px; font-weight:700; line-height:1; letter-spacing:-2px; }
+.clima .desc { font-weight:600; font-size:19px; }
 .clima .rango { color:var(--suave); }
 
-main { flex:1; display:flex; min-height:0; margin-top:18px; }
+main { flex:1; display:flex; min-height:0; margin-top:30px; }
 section { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:16px; }
-section + section { margin-left:24px; padding-left:24px; border-left:1px solid var(--linea); }
-h2 { font-size:32px; font-weight:700; margin-bottom:10px; display:flex; justify-content:space-between; align-items:baseline; }
-h2 .cuenta { font-family:"Avenir Next",Arial,sans-serif; font-size:17px; font-weight:600; color:var(--suave); }
+section + section { margin-left:28px; }
+h2 { font-size:34px; font-weight:700; margin-bottom:12px; display:flex; justify-content:space-between; align-items:baseline; }
+h2 .cuenta { font-family:"Avenir Next",Arial,sans-serif; font-size:17px; font-weight:500; color:var(--suave); }
 
-.lista { background:var(--hoja); border-radius:6px; padding:8px 6px 12px 14px; margin-bottom:14px; }
-.lista h3 { font-size:18px; display:flex; justify-content:space-between; align-items:center; }
-.elem { display:flex; align-items:center; min-height:46px; border-bottom:1px solid var(--linea); }
-.caja { width:30px; height:30px; flex:none; margin-right:12px; border:2px solid var(--tinta); border-radius:4px;
-  background:transparent; color:var(--hoja); font-size:18px; font-weight:700; line-height:26px; }
+.lista { background:var(--hoja); border-radius:18px; padding:12px 8px 14px 18px; margin-bottom:14px; }
+.lista h3 { font-size:19px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+.elem { display:flex; align-items:center; min-height:48px; }
+.caja { width:28px; height:28px; flex:none; margin-right:14px; border:2px solid var(--tinta); border-radius:50%;
+  background:transparent; color:var(--fondo); font-size:15px; font-weight:700; line-height:24px; }
 .hecho .caja { background:var(--tinta); }
 .texto { flex:1; }
 .hecho .texto { text-decoration:line-through; color:var(--suave); }
 .quitar { width:44px; height:44px; flex:none; border:0; background:none; color:var(--suave); font-size:24px; }
-.agregar { display:flex; margin:10px 8px 0 0; }
-input { flex:1; min-width:0; font:inherit; padding:9px 11px; border:1px solid var(--linea); border-radius:4px;
-  background:var(--fondo); color:var(--tinta); -webkit-appearance:none; }
-.btn { margin-left:8px; padding:9px 16px; border:0; border-radius:4px; background:var(--tinta); color:var(--hoja); font-weight:600; }
+.agregar { display:flex; margin:8px 10px 0 0; }
+input { flex:1; min-width:0; font:inherit; padding:10px 18px; border:0; border-radius:999px;
+  background:var(--hoja); color:var(--tinta); -webkit-appearance:none; outline:none; }
+input:focus { box-shadow:0 0 0 2px var(--tinta); }
+input::-webkit-input-placeholder { color:var(--suave); }
+input::placeholder { color:var(--suave); }
+.btn { margin-left:8px; padding:10px 20px; border:0; border-radius:999px; background:var(--tinta); color:var(--fondo); font-weight:600; }
+.btn.fantasma { background:transparent; color:var(--suave); padding:10px 12px; }
 
-.pago { display:flex; align-items:center; background:var(--hoja); border-radius:6px; padding:12px 14px;
-  margin-bottom:10px; border-left:8px solid var(--hoja); }
-.pago.urgente { border-left-color:var(--alerta); }
+.pago { display:flex; align-items:center; background:var(--hoja); border-radius:18px; padding:14px 14px 14px 18px; margin-bottom:10px; }
+.pago.urgente { background:var(--tinta); color:var(--fondo); }
+.pago.urgente .cuando { color:var(--fondo); opacity:.75; }
+.pago.urgente .btn { background:var(--fondo); color:var(--tinta); }
 .pago .info { flex:1; }
 .pago .concepto { font-weight:600; }
 .pago .cuando { color:var(--suave); font-size:15px; }
-.pago .monto { font-size:28px; font-weight:700; margin:0 6px 0 12px; }
+.pago .monto { font-size:30px; font-weight:700; margin:0 6px 0 12px; }
 .vacio { color:var(--suave); padding:6px 0; }
 
-footer { border-top:3px solid var(--tinta); padding:12px 0 18px; }
-.respuesta { min-height:26px; max-height:100px; overflow-y:auto; -webkit-overflow-scrolling:touch; margin-bottom:10px; }
-.respuesta b { margin-right:6px; }
-.error { color:#B3261E; }
-.noche .error { color:#F28B82; }
-#mensaje { font-size:19px; padding:13px; }
+footer { padding:14px 0 22px; }
+.respuesta { min-height:26px; max-height:100px; overflow-y:auto; -webkit-overflow-scrolling:touch; margin:0 0 10px 18px; }
+.respuesta b { margin-right:8px; }
+.error { font-weight:600; text-decoration:underline; }
+#mensaje { font-size:19px; padding:15px 22px; }
 </style>
 </head>
 <body>
@@ -91,7 +97,7 @@ footer { border-top:3px solid var(--tinta); padding:12px 0 18px; }
   <div style="display:flex">
     <input id="mensaje" type="text" placeholder="Pídele algo a Jarvis" autocomplete="off">
     <button class="btn" id="enviar">Enviar</button>
-    <button class="btn" id="ajustes">Ajustes</button>
+    <button class="btn fantasma" id="ajustes">Ajustes</button>
   </div>
 </footer>
 
@@ -246,7 +252,7 @@ footer { border-top:3px solid var(--tinta); padding:12px 0 18px; }
     $('fecha').innerHTML = dia.charAt(0).toUpperCase() + dia.slice(1) + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
     var saludo = h < 12 ? 'Buenos días' : (h < 19 ? 'Buenas tardes' : 'Buenas noches');
     $('saludo').innerHTML = esc(saludo + (config.nombre ? ', ' + config.nombre : ''));
-    document.documentElement.className = (h >= 22 || h < 6) ? 'noche' : '';
+    document.documentElement.className = (h >= 6 && h < 12) ? 'manana' : (h >= 12 && h < 19) ? 'tarde' : 'noche';
     pintarPagos();
   }
 
